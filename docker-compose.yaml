@@ -1,0 +1,16 @@
+services:
+  service1:
+    build:
+      context: ./service1
+    container_name: service1
+    image: python_img
+    ports:
+      - "8199:8199"
+    restart: unless-stopped
+
+  service2:
+    build:
+      context: ./service2
+    container_name: service2
+    image: nodejs_img
+    restart: unless-stopped

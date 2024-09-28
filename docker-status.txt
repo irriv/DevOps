@@ -1,0 +1,12 @@
+$ docker container ls
+CONTAINER ID   IMAGE        COMMAND                  CREATED              STATUS          PORTS                                       NAMES
+4193f8ea51f3   nodejs_img   "docker-entrypoint.s…"   About a minute ago   Up 58 seconds   8200/tcp                                    service2
+1a896b6a72ad   python_img   "python service1.py"     About a minute ago   Up 58 seconds   0.0.0.0:8199->8199/tcp, :::8199->8199/tcp   service1
+
+
+$ docker network ls
+NETWORK ID     NAME                       DRIVER    SCOPE
+a86de88d49f7   bridge                     bridge    local
+4f85a12b5012   devops-exercise1_default   bridge    local
+faabd184a4cd   host                       host      local
+592083b5814f   none                       null      local
