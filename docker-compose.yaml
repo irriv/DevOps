@@ -2,15 +2,36 @@ services:
   service1:
     build:
       context: ./service1
-    container_name: service1
     image: python_img
-    ports:
-      - "8199:8199"
+    environment:
+     - PORT=8199
+    deploy:
+      replicas: 3
+    networks:
+      - loadbalancing
     restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 
   service2:
     build:
       context: ./service2
     container_name: service2
     image: nodejs_img
+    networks:
+      - loadbalancing
     restart: unless-stopped
+
+  nginx:
+    build:
+      context: ./nginx
+    container_name: nginx
+    ports:
+      - "8081:8081"
+    networks:
+      - loadbalancing
+    depends_on:
+      - service1
+
+networks:
+  loadbalancing:

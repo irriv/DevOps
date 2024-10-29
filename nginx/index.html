@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Request</title>
+    <script>
+        function makeRequest() {
+            fetch('/service1')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    document.getElementById('responseArea').value = JSON.stringify(data, null, 4);
+                })
+                .catch(error => {
+                    document.getElementById('responseArea').value = `Error: ${error.message}`;
+                });
+        }
+
+        function stopContainers() {
+            document.getElementById('responseArea').value = 'Sending stop command to service1...';
+            fetch('/service1/stop');
+        }
+    </script>
+</head>
+<body>
+    <h1>Service Request</h1>
+    <button onclick="makeRequest()">REQUEST</button>
+    <button onclick="stopContainers()">STOP</button>
+    <textarea id="responseArea" rows="20" cols="100" placeholder="Response will appear here..."></textarea>
+</body>
+</html>

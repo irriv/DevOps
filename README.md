@@ -5,9 +5,12 @@ This program collects information from the Docker container:
 - Available disk space
 - Time since last boot
 
-This information comes from both service1 and service2 in json format. Service2 is only accessible within the Docker composition.
+This information comes from both service1 and service2 in json format. There are 3 instances of service1. Only the Nginx service is accessible from the outside.
 # How to run
-1. Clone repository ```git clone -b exercise1 https://github.com/irriv/DevOps.git```
+1. Clone repository ```git clone -b exercise4 https://github.com/irriv/DevOps.git```
 2. Navigate to repository in terminal ```cd DevOps```
 3. Run the command ```docker compose up --build``` OR ```docker-compose up --build``` depending on your Docker installation (docker-compose is deprecated)
-4. Either open ```localhost:8199``` in browser or run the command ```curl localhost:8199``` in another terminal window to see the output
+4. Open ```localhost:8081``` in browser
+5. Login with the credentials in ```login.txt```
+6. Press the ```REQUEST``` button to fetch information.
+7. Press the ```STOP``` button to stop all the containers.

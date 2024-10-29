@@ -1,5 +1,5 @@
 Used LLM tool: ChatGPT.
 Motivation: Coding efficiency and problem solving.
-How it helped: Quickly drafting up solutions for data collection and docker-related files. Handling monotonous tasks like writing exception handling (try-catch). Aiding in debugging.
-Mistakes it did: Suggesting modifications to the code that do not work, for example, using htt.client.HTTPConnection with a with-statement in Python. Generating code that has unexpected behavior under certain conditions.
-What LLM could not provide: Up-to-date information on Docker image versions. Optimal solutions for some tasks like getting IP address information (insists on using additional libraries when there is no need to). Consistency in coding style at times.
+How it helped: Problem solving related to nginx integration. Aid in stopping containers.
+Mistakes it did: Tried to include the Docker SDK for Python erroneously.
+What LLM could not provide: -

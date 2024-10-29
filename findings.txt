@@ -1,4 +1,0 @@
-Containers share the same kernel of the host OS, unlike virtual machines.
-Containers can also communicate with the host's processes through system calls, for example.
-Containers communicate with each other and with the host through the host's network stack.
-Containers share the filesystem with the host. This is usually done through mounted volumes.

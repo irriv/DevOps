@@ -2,6 +2,9 @@ import subprocess
 import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import http.client
+import time
+import docker
+import socket
 
 def get_container_ip():
     try:
@@ -51,21 +54,32 @@ def get_service2_info():
 
 class ServiceHandler(BaseHTTPRequestHandler):
     def do_GET(self):
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.end_headers()
+        if self.path == "/stop":
+            client = docker.from_env()
+            current_container = client.containers.get(socket.gethostname())
+            current_container_id = current_container.id
+            for container in client.containers.list():
+                if container.id != current_container_id:
+                    container.stop()
+            if current_container_id:
+                current_container.stop()
+        else:
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
 
-        service_info = {
-            "Service": {
-                "IP Address Information": get_container_ip(),
-                "List of Running Processes": get_running_processes(),
-                "Available Disk Space": get_disk_space(),
-                "Time Since Last Boot": get_uptime()
-            },
-            "Service2": get_service2_info()
-        }
+            service_info = {
+                "Service": {
+                    "IP Address Information": get_container_ip(),
+                    "List of Running Processes": get_running_processes(),
+                    "Available Disk Space": get_disk_space(),
+                    "Time Since Last Boot": get_uptime()
+                },
+                "Service2": get_service2_info()
+            }
 
-        self.wfile.write(json.dumps(service_info, indent=4).encode("utf-8"))
+            self.wfile.write(json.dumps(service_info, indent=4).encode("utf-8"))
+            time.sleep(2)
 
 
 def run(server_class=HTTPServer, handler_class=ServiceHandler, port=8199):
