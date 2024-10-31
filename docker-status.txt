@@ -1,16 +1,15 @@
 $ docker container ls
-CONTAINER ID   IMAGE          COMMAND                  CREATED          STATUS          PORTS                                                           NAMES
-b8ff5ad603e6   devops-nginx   "/docker-entrypoint.…"   37 seconds ago   Up 33 seconds   80/tcp, 8198/tcp, 0.0.0.0:8198->8081/tcp, [::]:8198->8081/tcp   nginx
-11d76a63d59e   python_img     "python service1.py"     38 seconds ago   Up 36 seconds   8199/tcp                                                        devops-service1-2
-d685f2ddf517   python_img     "python service1.py"     38 seconds ago   Up 35 seconds   8199/tcp                                                        devops-service1-1
-c8a8f9cf53d9   nodejs_img     "docker-entrypoint.s…"   38 seconds ago   Up 36 seconds   8200/tcp                                                        service2
-5326d503d092   python_img     "python service1.py"     38 seconds ago   Up 34 seconds   8199/tcp                                                        devops-service1-3
+CONTAINER ID   IMAGE          COMMAND                  CREATED          STATUS          PORTS                                               NAMES
+4e9ae789ce0e   devops-nginx   "/docker-entrypoint.…"   56 seconds ago   Up 50 seconds   80/tcp, 0.0.0.0:8198->8198/tcp, :::8198->8198/tcp   nginx
+8cfa4749824c   nodejs_img     "docker-entrypoint.s…"   58 seconds ago   Up 54 seconds   8200/tcp                                            service2
+492619316ec8   python_img     "python service1.py"     58 seconds ago   Up 54 seconds   8199/tcp                                            devops-service1-3
+fdb8c24f0759   python_img     "python service1.py"     58 seconds ago   Up 52 seconds   8199/tcp                                            devops-service1-2
+f0410ead9f3c   python_img     "python service1.py"     58 seconds ago   Up 51 seconds   8199/tcp                                            devops-service1-1
 
 
-
-$ docker network ls
+docker network ls
 NETWORK ID     NAME                   DRIVER    SCOPE
-296531eb141e   bridge                 bridge    local
-1c09b40f694c   devops_loadbalancing   bridge    local
+1a8ccb3baf79   bridge                 bridge    local
+b7ed13385222   devops_loadbalancing   bridge    local
 faabd184a4cd   host                   host      local
 592083b5814f   none                   null      local
