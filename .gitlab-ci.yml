@@ -34,8 +34,8 @@ test-job:   # This job runs in the test stage.
     - echo "Starting services for testing..."
     - docker compose up -d
     - echo "Running API tests..."
-    - chmod +x api-tests.sh
-    - ./api-tests.sh
+    - chmod +x ./tests/api-tests.sh
+    - ./tests/api-tests.sh
     - echo "Stopping services after testing..."
     - docker compose down
 
