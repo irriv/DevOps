@@ -57,4 +57,13 @@ echo "Testing PUT /state with 'SHUTDOWN'..."
 curl -s -o /dev/null -w "%{http_code}" -X PUT -H "Content-Type: text/plain" --data "SHUTDOWN" "${BASE_URL}/state" | grep -q "200"
 log_test $? "PUT /state with 'SHUTDOWN' should return HTTP 200"
 
-echo "All tests ran successfully!"
+
+
+# Summary of results
+if [ "$TEST_FAILURES" -eq 0 ]; then
+    echo "All tests passed successfully!"
+    exit 0
+else
+    echo "$TEST_FAILURES test(s) failed."
+    exit 1
+fi
