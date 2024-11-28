@@ -3,13 +3,16 @@
 # Base URL for the API gateway
 BASE_URL="http://localhost:8197"
 
+# Track overall test failures
+TEST_FAILURES=0
+
 # Helper function for logging test results
 log_test() {
     if [ "$1" -eq 0 ]; then
         echo "[PASS] $2"
     else
         echo "[FAIL] $2"
-        exit 1
+        TEST_FAILURES=$((TEST_FAILURES + 1))
     fi
 }
 
