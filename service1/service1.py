@@ -188,7 +188,8 @@ class ServiceHandler(BaseHTTPRequestHandler):
                 self.send_response_with_message(status, msg)
                 updated_state = read_state()
                 if updated_state == "SHUTDOWN":
-                    shutdown()
+                    # Run shutdown in a separate thread so the response is sent first
+                    Thread(target=shutdown).start()
                 elif updated_state == "INIT":
                     logout()
             except Exception as e:
