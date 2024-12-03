@@ -12,6 +12,7 @@ services:
     restart: unless-stopped
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - shared_state:/shared_data
 
   service2:
     build:
@@ -47,3 +48,6 @@ services:
 
 networks:
   loadbalancing:
+
+volumes:
+  shared_state:

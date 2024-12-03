@@ -6,43 +6,76 @@ import time
 import docker
 import socket
 from datetime import datetime
+import os
+from threading import Lock
+from threading import Thread
+
+# Shared files
+STATE_FILE = "/shared_data/state.txt"
+LOG_FILE = "/shared_data/run-log.txt"
+file_lock = Lock()
 
 # State management variables
-state = "INIT"
-state_log = []
 possible_states = ["INIT", "PAUSED", "RUNNING", "SHUTDOWN"]
 possible_paths = ["/state", "/request", "/run-log"]
 
-def log_state_change(new_state):
-    global state
-    if state != new_state:
+# Read the current state
+def read_state():
+    with file_lock:
+        if not os.path.exists(STATE_FILE):
+            return "INIT"  # Default state
+        with open(STATE_FILE, "r") as f:
+            return f.read().strip()
+
+# Update the state
+def write_state(new_state):
+    with file_lock:
+        with open(STATE_FILE, "w") as f:
+            f.write(new_state)
+
+# Update the run log
+def log_state_change(old_state, new_state):
+    with file_lock:
         timestamp = datetime.now().isoformat()
-        state_log.append(f"{timestamp}: {state} -> {new_state}")
-        state = new_state
+        log_entry = f"{timestamp}: {old_state} -> {new_state}\n"
+        with open(LOG_FILE, "a+") as f:
+            f.write(log_entry)
+
+# Get the run log
+def get_run_log():
+    with file_lock:
+        if not os.path.exists(LOG_FILE):
+            return "No log entries found."
+        with open(LOG_FILE, "r") as f:
+            return f.read()
+
 
 def set_state(new_state, auth_header):
-    if state == "INIT" and new_state != "RUNNING":
+    old_state = read_state()
+    if old_state == "INIT" and new_state != "RUNNING":
         return "Login required to change state", 403
-    if state == "INIT" and new_state == "RUNNING":
+    if old_state == "INIT" and new_state == "RUNNING":
         if not auth_header or not auth_header.startswith("Basic "):
             return "Authentication required to change state", 401
-    if state == "SHUTDOWN":
+    if old_state == "SHUTDOWN":
         return "System is shut down", 403
-    if new_state == state:
+    if new_state == old_state:
         return "State unchanged", 200
     if not isinstance(new_state, str) or new_state not in possible_states:
         return "Invalid state payload", 400
 
-    log_state_change(new_state)
+    write_state(new_state)
+    log_state_change(old_state, new_state)
 
     if new_state == "INIT":
-        return "System reset to INIT. Please log in again.", 401
+        return "System reset to INIT. Please log in again.", 200
     elif new_state == "SHUTDOWN":
         return "System shutting down...", 200
 
     return f"State changed to {new_state}", 200
 
 def shutdown():
+    remove_files()
     client = docker.from_env()
     current_container = client.containers.get(socket.gethostname())
     current_container_id = current_container.id
@@ -50,6 +83,20 @@ def shutdown():
         if container.id != current_container_id:
             container.stop()
     current_container.stop()
+
+def remove_files():
+    # Remove the state and run-log files
+    try:
+        if os.path.exists(STATE_FILE):
+            os.remove(STATE_FILE)
+        if os.path.exists(LOG_FILE):
+            os.remove(LOG_FILE)
+    except Exception as e:
+        print(f"Error removing state or log file: {str(e)}")
+
+def logout():
+    # Not implemented!
+    return
 
 def get_container_ip():
     try:
@@ -115,6 +162,7 @@ class ServiceHandler(BaseHTTPRequestHandler):
         self.wfile.write(message.encode("utf-8"))
 
     def do_GET(self):
+        state = read_state()
         if self.path not in possible_paths:
             self.send_response_with_message(400, "Invalid request")
         elif self.path == "/request" and state == "PAUSED":
@@ -127,7 +175,7 @@ class ServiceHandler(BaseHTTPRequestHandler):
             self.send_response_with_message(200, info_str)
             time.sleep(2)
         elif self.path == "/run-log":
-            log_str = "\n".join(state_log)
+            log_str = get_run_log()
             self.send_response_with_message(200, log_str)
 
     def do_PUT(self):
@@ -138,8 +186,12 @@ class ServiceHandler(BaseHTTPRequestHandler):
                 auth_header = self.headers.get("Authorization")
                 msg, status = set_state(new_state, auth_header)
                 self.send_response_with_message(status, msg)
-                if state == "SHUTDOWN":
-                    shutdown()
+                updated_state = read_state()
+                if updated_state == "SHUTDOWN":
+                    # Run shutdown in a separate thread so the response is sent first
+                    Thread(target=shutdown).start()
+                elif updated_state == "INIT":
+                    logout()
             except Exception as e:
                 self.send_response_with_message(400, f"Error processing request: {str(e)}")
         else:

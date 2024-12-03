@@ -113,19 +113,19 @@
     </script>
 </head>
 <body>
-    <h1>Service Request</h1>
-    
-    <!-- Buttons for GET requests -->
-    <button onclick="makeRequest()">REQUEST</button>
-    <button onclick="getState()">STATE</button>
-    <button onclick="getRunLog()">RUN LOG</button>
-
-    <!-- Buttons for PUT requests to change state -->
-    <button onclick="changeState('INIT')">INITIALIZE</button>
-    <button onclick="changeState('RUNNING')">RUN</button>
-    <button onclick="changeState('PAUSED')">PAUSE</button>
-    <button onclick="stopContainers()">STOP</button>
+    <h1>DevOps Project</h1>
     
     <textarea id="responseArea" rows="20" cols="100" placeholder="Response will appear here..."></textarea>
+
+    <div id="buttons">
+        <button onclick="makeRequest()">REQUEST</button>
+        <button onclick="getState()">STATE</button>
+        <button onclick="getRunLog()">RUN LOG</button>
+        
+        <button onclick="changeState('INIT')">INITIALIZE</button>
+        <button onclick="changeState('RUNNING')">RUN</button>
+        <button onclick="changeState('PAUSED')">PAUSE</button>
+        <button onclick="stopContainers()">STOP</button>
+    </div>
 </body>
 </html>
