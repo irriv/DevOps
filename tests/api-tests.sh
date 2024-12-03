@@ -3,6 +3,10 @@
 # Base URL for the API gateway
 BASE_URL="http://localhost:8197"
 
+# Credentials
+USERNAME="vbox"
+PASSWORD="123"
+
 # Track overall test failures
 TEST_FAILURES=0
 
@@ -28,17 +32,15 @@ echo "Testing GET /run-log..."
 curl -s -o /dev/null -w "%{http_code}" "${BASE_URL}/run-log" | grep -q "200"
 log_test $? "GET /run-log should return HTTP 200"
 
-# Log in here
+# Test 3: PUT /state (RUNNING)
+echo "Testing PUT /state with 'RUNNING'..."
+curl -s -o /dev/null -w "%{http_code}" -u "$USERNAME:$PASSWORD" -X PUT -H "Content-Type: text/plain" --data "RUNNING" "${BASE_URL}/state" | grep -q "200"
+log_test $? "PUT /state with 'RUNNING' should return HTTP 200"
 
-# Test 3: PUT /state (PAUSED)
+# Test 4: PUT /state (PAUSED)
 echo "Testing PUT /state with 'PAUSED'..."
 curl -s -o /dev/null -w "%{http_code}" -X PUT -H "Content-Type: text/plain" --data "PAUSED" "${BASE_URL}/state" | grep -q "200"
 log_test $? "PUT /state with 'PAUSED' should return HTTP 200"
-
-# Test 4: PUT /state (RUNNING)
-echo "Testing PUT /state with 'RUNNING'..."
-curl -s -o /dev/null -w "%{http_code}" -X PUT -H "Content-Type: text/plain" --data "RUNNING" "${BASE_URL}/state" | grep -q "200"
-log_test $? "PUT /state with 'RUNNING' should return HTTP 200"
 
 # Test 5: GET /request
 echo "Testing GET /request..."
@@ -50,9 +52,12 @@ echo "Testing PUT /state with 'INIT'..."
 curl -s -o /dev/null -w "%{http_code}" -X PUT -H "Content-Type: text/plain" --data "INIT" "${BASE_URL}/state" | grep -q "200"
 log_test $? "PUT /state with 'INIT' should return HTTP 200"
 
-# Log in here again
+# Test 7: Log in here again
+echo "Logging in again..."
+curl -s -o /dev/null -w "%{http_code}" -u "$USERNAME:$PASSWORD" -X PUT -H "Content-Type: text/plain" --data "RUNNING" "${BASE_URL}/state" | grep -q "200"
+log_test $? "Re-login (PUT /state with 'RUNNING') should return HTTP 200"
 
-# Test 7: PUT /state (SHUTDOWN)
+# Test 8: PUT /state (SHUTDOWN)
 echo "Testing PUT /state with 'SHUTDOWN'..."
 curl -s -o /dev/null -w "%{http_code}" -X PUT -H "Content-Type: text/plain" --data "SHUTDOWN" "${BASE_URL}/state" | grep -q "200"
 log_test $? "PUT /state with 'SHUTDOWN' should return HTTP 200"
