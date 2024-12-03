@@ -32,6 +32,18 @@ services:
       - loadbalancing
     depends_on:
       - service1
+      - gateway
+
+  gateway:
+    build:
+      context: ./gateway
+    container_name: gateway
+    ports:
+      - "8197:8197"
+    networks:
+      - loadbalancing
+    depends_on:
+      - service1
 
 networks:
   loadbalancing:

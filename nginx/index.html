@@ -5,32 +5,127 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Service Request</title>
     <script>
+        // Function to make GET request to /api/request
         function makeRequest() {
-            fetch('/service1')
+            fetch('/api/request')
                 .then(response => {
                     if (!response.ok) {
                         throw new Error('Network response was not ok');
                     }
-                    return response.json();
+                    return response.text();  // We expect plain text
                 })
                 .then(data => {
-                    document.getElementById('responseArea').value = JSON.stringify(data, null, 4);
+                    document.getElementById('responseArea').value = data;
                 })
                 .catch(error => {
                     document.getElementById('responseArea').value = `Error: ${error.message}`;
                 });
         }
 
+        // Function to make GET request to /api/state
+        function getState() {
+            fetch('/api/state')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();  // We expect plain text
+                })
+                .then(data => {
+                    document.getElementById('responseArea').value = data;
+                })
+                .catch(error => {
+                    document.getElementById('responseArea').value = `Error: ${error.message}`;
+                });
+        }
+
+        // Function to make GET request to /api/run-log
+        function getRunLog() {
+            fetch('/api/run-log')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.text();  // We expect plain text
+                })
+                .then(data => {
+                    document.getElementById('responseArea').value = data;
+                })
+                .catch(error => {
+                    document.getElementById('responseArea').value = `Error: ${error.message}`;
+                });
+        }
+
+        // Function to change state to a specific state via PUT request
+        function changeState(newState) {
+            document.getElementById('responseArea').value = `Sending state change request to ${newState}...`;
+            fetch('/api/state', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'text/plain'
+                },
+                body: newState
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(errorMessage => {
+                        throw new Error(errorMessage);
+                    });
+                }
+                return response.text();  // We expect plain text
+            })
+            .then(data => {
+                document.getElementById('responseArea').value = data;
+            })
+            .catch(error => {
+                document.getElementById('responseArea').value = `Error: ${error.message}`;
+            });
+        }
+
+        // Function to stop containers (shutdown state)
         function stopContainers() {
             document.getElementById('responseArea').value = 'Sending stop command to service1...';
-            fetch('/service1/stop');
+            fetch('/api/state', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'text/plain',
+                },
+                body: 'SHUTDOWN'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to stop containers');
+                }
+                return response.text();  // We expect plain text
+            })
+            .then(data => {
+                document.getElementById('responseArea').value = data;
+            })
+            .catch(error => {
+                document.getElementById('responseArea').value = `Error: ${error.message}`;
+            });
         }
+
+        // Change state to RUNNING when the user logs in (page is served)
+        window.onload = function() {
+            changeState('RUNNING');
+        };
     </script>
 </head>
 <body>
     <h1>Service Request</h1>
+    
+    <!-- Buttons for GET requests -->
     <button onclick="makeRequest()">REQUEST</button>
+    <button onclick="getState()">STATE</button>
+    <button onclick="getRunLog()">RUN LOG</button>
+
+    <!-- Buttons for PUT requests to change state -->
+    <button onclick="changeState('INIT')">INITIALIZE</button>
+    <button onclick="changeState('RUNNING')">RUN</button>
+    <button onclick="changeState('PAUSED')">PAUSE</button>
     <button onclick="stopContainers()">STOP</button>
+    
     <textarea id="responseArea" rows="20" cols="100" placeholder="Response will appear here..."></textarea>
 </body>
 </html>

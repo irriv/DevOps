@@ -5,6 +5,51 @@ import http.client
 import time
 import docker
 import socket
+from datetime import datetime
+
+# State management variables
+state = "INIT"
+state_log = []
+possible_states = ["INIT", "PAUSED", "RUNNING", "SHUTDOWN"]
+possible_paths = ["/state", "/request", "/run-log"]
+
+def log_state_change(new_state):
+    global state
+    if state != new_state:
+        timestamp = datetime.now().isoformat()
+        state_log.append(f"{timestamp}: {state} -> {new_state}")
+        state = new_state
+
+def set_state(new_state, auth_header):
+    if state == "INIT" and new_state != "RUNNING":
+        return "Login required to change state", 403
+    if state == "INIT" and new_state == "RUNNING":
+        if not auth_header or not auth_header.startswith("Basic "):
+            return "Authentication required to change state", 401
+    if state == "SHUTDOWN":
+        return "System is shut down", 403
+    if new_state == state:
+        return "State unchanged", 200
+    if not isinstance(new_state, str) or new_state not in possible_states:
+        return "Invalid state payload", 400
+
+    log_state_change(new_state)
+
+    if new_state == "INIT":
+        return "System reset to INIT. Please log in again.", 401
+    elif new_state == "SHUTDOWN":
+        return "System shutting down...", 200
+
+    return f"State changed to {new_state}", 200
+
+def shutdown():
+    client = docker.from_env()
+    current_container = client.containers.get(socket.gethostname())
+    current_container_id = current_container.id
+    for container in client.containers.list():
+        if container.id != current_container_id:
+            container.stop()
+    current_container.stop()
 
 def get_container_ip():
     try:
@@ -32,12 +77,12 @@ def get_uptime():
         uptime = subprocess.check_output(["uptime", "-p"]).decode("utf-8").strip()
         return uptime
     except subprocess.CalledProcessError as e:
-            return {"Error": f"Error retrieving uptime: {str(e)}"}
+        return {"Error": f"Error retrieving uptime: {str(e)}"}
 
 def get_service2_info():
     connection = None
     try:
-        connection = http.client.HTTPConnection("service2", 8200)  # Port 8200
+        connection = http.client.HTTPConnection("service2", 8200)
         connection.request("GET", "/")
         response = connection.getresponse()
         if response.status == 200:
@@ -51,36 +96,54 @@ def get_service2_info():
         if connection:
             connection.close()
 
+def get_info():
+    return {
+        "Service": {
+            "IP Address Information": get_container_ip(),
+            "List of Running Processes": get_running_processes(),
+            "Available Disk Space": get_disk_space(),
+            "Time Since Last Boot": get_uptime()
+        },
+        "Service2": get_service2_info()
+    }
 
 class ServiceHandler(BaseHTTPRequestHandler):
+    def send_response_with_message(self, status, message):
+        self.send_response(status)
+        self.send_header("Content-Type", "text/plain")
+        self.end_headers()
+        self.wfile.write(message.encode("utf-8"))
+
     def do_GET(self):
-        if self.path == "/stop":
-            client = docker.from_env()
-            current_container = client.containers.get(socket.gethostname())
-            current_container_id = current_container.id
-            for container in client.containers.list():
-                if container.id != current_container_id:
-                    container.stop()
-            if current_container_id:
-                current_container.stop()
-        else:
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-
-            service_info = {
-                "Service": {
-                    "IP Address Information": get_container_ip(),
-                    "List of Running Processes": get_running_processes(),
-                    "Available Disk Space": get_disk_space(),
-                    "Time Since Last Boot": get_uptime()
-                },
-                "Service2": get_service2_info()
-            }
-
-            self.wfile.write(json.dumps(service_info, indent=4).encode("utf-8"))
+        if self.path not in possible_paths:
+            self.send_response_with_message(400, "Invalid request")
+        elif self.path == "/request" and state == "PAUSED":
+            self.send_response_with_message(403, "System is paused")
+        elif self.path == "/state":
+            self.send_response_with_message(200, state)
+        elif self.path == "/request":
+            info = get_info()
+            info_str = "\n".join([f"{key}:\n{value}" for key, value in info.items()])
+            self.send_response_with_message(200, info_str)
             time.sleep(2)
+        elif self.path == "/run-log":
+            log_str = "\n".join(state_log)
+            self.send_response_with_message(200, log_str)
 
+    def do_PUT(self):
+        if self.path == "/state":
+            try:
+                content_length = int(self.headers['Content-Length'])
+                new_state = self.rfile.read(content_length).decode("utf-8").strip()
+                auth_header = self.headers.get("Authorization")
+                msg, status = set_state(new_state, auth_header)
+                self.send_response_with_message(status, msg)
+                if state == "SHUTDOWN":
+                    shutdown()
+            except Exception as e:
+                self.send_response_with_message(400, f"Error processing request: {str(e)}")
+        else:
+            self.send_response_with_message(400, "Invalid request")
 
 def run(server_class=HTTPServer, handler_class=ServiceHandler, port=8199):
     server_address = ('', port)
