@@ -1,5 +1,0 @@
-Used LLM tool: ChatGPT.
-Motivation: Coding efficiency and problem solving.
-How it helped: Problem solving related to nginx integration. Aid in stopping containers.
-Mistakes it did: Tried to include the Docker SDK for Python erroneously.
-What LLM could not provide: -
