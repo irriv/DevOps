@@ -7,13 +7,11 @@ import docker
 import socket
 from datetime import datetime
 import os
-from threading import Lock
 from threading import Thread
 
 # Shared files
 STATE_FILE = "/shared_data/state.txt"
 LOG_FILE = "/shared_data/run-log.txt"
-file_lock = Lock()
 
 # State management variables
 possible_states = ["INIT", "PAUSED", "RUNNING", "SHUTDOWN"]
@@ -21,34 +19,29 @@ possible_paths = ["/state", "/request", "/run-log"]
 
 # Read the current state
 def read_state():
-    with file_lock:
-        if not os.path.exists(STATE_FILE):
-            return "INIT"  # Default state
-        with open(STATE_FILE, "r") as f:
-            return f.read().strip()
+    if not os.path.exists(STATE_FILE):
+        return "INIT"  # Default state
+    with open(STATE_FILE, "r") as f:
+        return f.read().strip()
 
 # Update the state
 def write_state(new_state):
-    with file_lock:
-        with open(STATE_FILE, "w") as f:
-            f.write(new_state)
+    with open(STATE_FILE, "w") as f:
+        f.write(new_state)
 
 # Update the run log
 def log_state_change(old_state, new_state):
-    with file_lock:
-        timestamp = datetime.now().isoformat()
-        log_entry = f"{timestamp}: {old_state} -> {new_state}\n"
-        with open(LOG_FILE, "a+") as f:
-            f.write(log_entry)
+    timestamp = datetime.now().isoformat()
+    log_entry = f"{timestamp}: {old_state} -> {new_state}\n"
+    with open(LOG_FILE, "a+") as f:
+        f.write(log_entry)
 
 # Get the run log
 def get_run_log():
-    with file_lock:
-        if not os.path.exists(LOG_FILE):
-            return "No log entries found."
-        with open(LOG_FILE, "r") as f:
-            return f.read()
-
+    if not os.path.exists(LOG_FILE):
+        return "No log entries found."
+    with open(LOG_FILE, "r") as f:
+        return f.read()
 
 def set_state(new_state, auth_header):
     old_state = read_state()
@@ -74,6 +67,7 @@ def set_state(new_state, auth_header):
 
     return f"State changed to {new_state}", 200
 
+# Remove files from volume and stop all containers
 def shutdown():
     remove_files()
     client = docker.from_env()
@@ -95,7 +89,7 @@ def remove_files():
         print(f"Error removing state or log file: {str(e)}")
 
 def logout():
-    # Not implemented!
+    # Logout the user so credentials would be asked again. Not implemented!
     return
 
 def get_container_ip():
