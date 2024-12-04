@@ -25,7 +25,7 @@ build-job:       # This job runs in the build stage, which runs first.
   stage: build
   script:
     - echo "Compiling the code..."
-    - docker compose build
+    - docker compose build --no-cache
     - echo "Compile complete."
 
 test-job:   # This job runs in the test stage.
@@ -37,7 +37,7 @@ test-job:   # This job runs in the test stage.
     - chmod +x ./tests/api-tests.sh
     - ./tests/api-tests.sh
     - echo "Stopping services after testing..."
-    - docker compose down
+    - docker compose down --volumes
 
 
 deploy-job:      # This job runs in the deploy stage.
